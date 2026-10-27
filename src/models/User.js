@@ -11,6 +11,8 @@ const UserSchema = new mongoose.Schema(
       enum: ['admin', 'therapist', 'staff'],
       default: 'staff',
     },
+    // Para el rol therapist: su ficha en Therapist (agenda y citas).
+    therapistId: { type: mongoose.Schema.Types.ObjectId, ref: 'Therapist' },
     active: { type: Boolean, default: true },
   },
   { timestamps: true }

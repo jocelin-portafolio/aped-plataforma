@@ -1,0 +1,40 @@
+# Producción en el servidor Vultr (NINTAI): sitio + MongoDB.
+#
+# El HTTPS lo da el proxy compartido de NINTAI (Caddy en /opt/nintai/proxy):
+# el sitio se une a la red "nintai" y deploy/aped-plataforma.caddy le indica
+# al proxy qué dominio reenviar. Ver deploy/install.sh.
+
+services:
+  app:
+    build:
+      context: ..
+    restart: unless-stopped
+    env_file: .env.production
+    environment:
+      MONGODB_URI: mongodb://mongo:27017/aped
+    depends_on:
+      - mongo
+    networks:
+      default:
+      nintai:
+        aliases:
+          - aped-plataforma
+
+  mongo:
+    image: mongo:7
+    restart: unless-stopped
+    # Caché limitada: el servidor comparte memoria con otros proyectos.
+    command: ["--wiredTigerCacheSizeGB", "0.25"]
+    volumes:
+      - mongo-data:/data/db
+    # Solo en la red interna de este proyecto: no es accesible desde internet
+    # ni desde los otros servicios del proxy.
+    networks:
+      - default
+
+networks:
+  nintai:
+    external: true
+
+volumes:
+  mongo-data:

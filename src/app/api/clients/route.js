@@ -1,9 +1,13 @@
 import { connectDB } from '@/config/db';
 import Client from '@/models/Client';
 import { successResponse, errorResponse, paginatedResponse } from '@/lib/responses';
+import { requireRole } from '@/lib/auth';
 import { validateEmail } from '@/lib/validators';
 
 export async function GET(request) {
+  const { response: authError } = await requireRole(request, ['admin']);
+  if (authError) return authError;
+
   try {
     await connectDB();
     const { searchParams } = new URL(request.url);
@@ -34,6 +38,9 @@ export async function GET(request) {
 }
 
 export async function POST(request) {
+  const { response: authError } = await requireRole(request, ['admin']);
+  if (authError) return authError;
+
   try {
     await connectDB();
     const body = await request.json();
@@ -56,6 +63,9 @@ export async function POST(request) {
 }
 
 export async function PATCH(request) {
+  const { response: authError } = await requireRole(request, ['admin']);
+  if (authError) return authError;
+
   try {
     await connectDB();
     const { searchParams } = new URL(request.url);
