@@ -9,8 +9,8 @@
 # ejecutarlo actualiza el código y reconstruye sin borrar la base de datos.
 #
 # Dominio propio (debe apuntar ya a este servidor):
-#   bash install.sh main www.aped.cl
-# aped.cl y la dirección sslip.io quedan redirigiendo a www.aped.cl.
+#   bash install.sh main www.apedchile.cl
+# apedchile.cl y la dirección sslip.io quedan redirigiendo a www.apedchile.cl.
 set -euo pipefail
 
 BRANCH="${1:-main}"

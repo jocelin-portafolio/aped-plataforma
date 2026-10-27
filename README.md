@@ -107,7 +107,7 @@ npm run dev                  # http://localhost:3000
 Las cuentas se crean desde `/admin`, así que la primera se crea con un script (usa `MONGODB_URI` de `.env.local`):
 
 ```bash
-npm run create-admin -- --email ana@aped.cl --name "Ana Pérez"
+npm run create-admin -- --email ana@apedchile.cl --name "Ana Pérez"
 ```
 
 Genera una contraseña aleatoria y la muestra una sola vez (o usa `ADMIN_PASSWORD` si está definida). Para generar `AUTH_SECRET`:
@@ -142,18 +142,18 @@ El sitio corre con Docker en el servidor, detrás del proxy compartido NINTAI (C
 bash /root/aped-install.sh main
 ```
 
-### Dominio propio (www.aped.cl)
+### Dominio propio (www.apedchile.cl)
 
 1. Registra el dominio en [NIC Chile](https://www.nic.cl/).
 2. Administra el DNS (por ejemplo, gratis en Cloudflare: agrega el dominio y pon en NIC Chile los dos servidores de nombres que te indique).
-3. Crea dos registros **A** hacia la IP del servidor, `aped.cl` y `www.aped.cl`. En Cloudflare, déjalos en "Solo DNS" (nube gris) para que el servidor emita el certificado HTTPS.
+3. Crea dos registros **A** hacia la IP del servidor, `apedchile.cl` y `www.apedchile.cl`. En Cloudflare, déjalos en "Solo DNS" (nube gris) para que el servidor emita el certificado HTTPS.
 4. Cuando resuelvan, en el servidor:
 
 ```bash
-bash /root/aped-install.sh main www.aped.cl
+bash /root/aped-install.sh main www.apedchile.cl
 ```
 
-El script comprueba que el dominio apunte al servidor antes de tocar nada. `aped.cl` y la dirección sslip.io anterior quedan redirigiendo a `www.aped.cl`.
+El script comprueba que el dominio apunte al servidor antes de tocar nada. `apedchile.cl` y la dirección sslip.io anterior quedan redirigiendo a `www.apedchile.cl`.
 
 ## Conectar el bot a WhatsApp
 
