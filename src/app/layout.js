@@ -1,5 +1,6 @@
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
+import { ChatWidget } from '@/components/features/chat';
 import './globals.css';
 
 export const metadata = {
@@ -32,6 +33,7 @@ export default function RootLayout({ children }) {
         <Header />
         <main id="main-content">{children}</main>
         <Footer />
+        <ChatWidget />
       </body>
     </html>
   );

@@ -15,6 +15,7 @@ Plataforma full stack para **APED (Agrupación Personas Empoderadas por la Disca
 - **Talleres grupales:** inscripción por sesión con **control de capacidad y lista de espera automática** cuando se alcanza el cupo máximo; evita inscripciones duplicadas.
 - **Donaciones:** formulario dedicado con validación en cliente y servidor.
 - **Galería** con lightbox accesible.
+- **Chatbot de atención al cliente:** widget flotante en todas las páginas que responde con Claude (streaming) usando la información de servicios, talleres y contacto de `config/`. Sin `ANTHROPIC_API_KEY` responde con preguntas frecuentes predefinidas.
 - **SEO técnico:** metadatos por ruta (Metadata API del App Router) y datos estructurados **JSON-LD (schema.org `NGO`)**.
 
 ## Arquitectura
@@ -64,6 +65,7 @@ src/
 | `GET` | `/api/workshops` · `/api/workshops/sessions` | Talleres y sus sesiones. |
 | `POST` | `/api/workshops/:id/enroll` | Inscribe a un cliente o lo envía a lista de espera. |
 | `POST` | `/api/donations` | Registra una donación. |
+| `POST` | `/api/chat` | Chatbot: recibe `{ messages: [{ role, content }] }` y devuelve la respuesta como texto en streaming. |
 
 ## Ejecución local
 
@@ -79,6 +81,8 @@ npm run dev                  # http://localhost:3000
 |---|---|
 | `MONGODB_URI` | Cadena de conexión a MongoDB |
 | `NEXT_PUBLIC_BASE_URL` | URL pública, usada en metadatos y JSON-LD |
+| `ANTHROPIC_API_KEY` | API key de Claude para el chatbot (opcional; sin ella usa respuestas predefinidas) |
+| `ANTHROPIC_MODEL` | Modelo del chatbot (opcional, por defecto `claude-opus-5-5`) |
 
 ## Próximos pasos
 
