@@ -1,6 +1,7 @@
 import Anthropic from '@anthropic-ai/sdk';
 import { errorResponse } from '@/lib/responses';
-import { chatbot, systemPrompt, faqAnswer } from '@/config/chatbot';
+import { chatbot, systemPrompt } from '@/config/chatbot';
+import { faqAnswer, faqMatch } from '@/config/chatbotFaq';
 import { contact } from '@/config/navigation';
 
 const MODEL = process.env.ANTHROPIC_MODEL || 'claude-opus-5-5';
@@ -28,10 +29,14 @@ function validateMessages(messages) {
   return null;
 }
 
-function textResponse(body) {
-  return new Response(body, {
-    headers: { 'Content-Type': 'text/plain; charset=utf-8', 'Cache-Control': 'no-store' },
-  });
+// Las sugerencias de seguimiento viajan en un header (codificado, porque los
+// headers no admiten tildes) para no mezclarlas con el texto en streaming.
+function textResponse(body, suggestions = []) {
+  const headers = { 'Content-Type': 'text/plain; charset=utf-8', 'Cache-Control': 'no-store' };
+  if (suggestions.length) {
+    headers['X-Chat-Suggestions'] = encodeURIComponent(JSON.stringify(suggestions));
+  }
+  return new Response(body, { headers });
 }
 
 export async function POST(request) {
@@ -47,7 +52,8 @@ export async function POST(request) {
 
   // Sin API key, el bot responde con preguntas frecuentes predefinidas.
   if (!process.env.ANTHROPIC_API_KEY) {
-    return textResponse(faqAnswer(messages[messages.length - 1].content));
+    const { answer, suggestions } = faqMatch(messages[messages.length - 1].content);
+    return textResponse(answer, suggestions);
   }
 
   const client = new Anthropic();

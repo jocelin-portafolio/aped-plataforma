@@ -3,9 +3,29 @@
 import { useState, useRef, useEffect } from 'react';
 import { chatbot } from '@/config/chatbot';
 
+// Convierte en links las URLs y las rutas internas ("/talleres") de una respuesta.
+const LINK_PATTERN = /(https?:\/\/[^\s)]+|(?<![\w/])\/[a-z][a-z-]+)/g;
+
+function withLinks(text) {
+  return text.split(LINK_PATTERN).map((part, i) => {
+    if (i % 2 === 0) return part;
+    const external = part.startsWith('http');
+    return (
+      <a
+        key={i}
+        href={part}
+        {...(external && { target: '_blank', rel: 'noopener noreferrer' })}
+      >
+        {part}
+      </a>
+    );
+  });
+}
+
 export default function ChatWidget() {
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState([]);
+  const [suggestions, setSuggestions] = useState(chatbot.quickReplies);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const listRef = useRef(null);
@@ -32,6 +52,7 @@ export default function ChatWidget() {
     const history = [...messages, { role: 'user', content }];
     setMessages([...history, { role: 'assistant', content: '' }]);
     setInput('');
+    setSuggestions([]);
     setLoading(true);
 
     function updateReply(reply) {
@@ -49,6 +70,15 @@ export default function ChatWidget() {
         const json = await res.json().catch(() => null);
         updateReply(json?.error || 'No pude responder en este momento. Intenta nuevamente.');
         return;
+      }
+
+      const header = res.headers.get('X-Chat-Suggestions');
+      if (header) {
+        try {
+          setSuggestions(JSON.parse(decodeURIComponent(header)));
+        } catch {
+          // Sugerencias mal formadas: se omiten.
+        }
       }
 
       const reader = res.body.getReader();
@@ -98,14 +128,18 @@ export default function ChatWidget() {
             <p className="chat-bubble chat-bubble--assistant">{chatbot.welcome}</p>
             {messages.map((m, i) => (
               <p key={i} className={`chat-bubble chat-bubble--${m.role}`}>
-                {m.content || <span className="chat-typing" aria-label="Escribiendo">···</span>}
+                {m.content ? (
+                  m.role === 'assistant' ? withLinks(m.content) : m.content
+                ) : (
+                  <span className="chat-typing" aria-label="Escribiendo">···</span>
+                )}
               </p>
             ))}
           </div>
 
-          {messages.length === 0 && (
-            <div className="chat-quick-replies">
-              {chatbot.quickReplies.map((q) => (
+          {!loading && suggestions.length > 0 && (
+            <div className="chat-quick-replies" aria-label="Sugerencias">
+              {suggestions.map((q) => (
                 <button key={q} type="button" onClick={() => send(q)}>
                   {q}
                 </button>

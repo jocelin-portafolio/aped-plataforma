@@ -81,6 +81,12 @@ describe('POST /api/chat', () => {
       expect(await res.text()).toContain('La Capitanía #2516');
       expect(streamMock).not.toHaveBeenCalled();
     });
+
+    it('envía sugerencias de seguimiento en un header', async () => {
+      const res = await POST(ask('quiero donar'));
+      const suggestions = JSON.parse(decodeURIComponent(res.headers.get('X-Chat-Suggestions')));
+      expect(suggestions).toContain('Quiero ser socio mensual');
+    });
   });
 
   describe('con ANTHROPIC_API_KEY', () => {

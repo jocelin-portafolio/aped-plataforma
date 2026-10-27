@@ -1,22 +1,72 @@
 import { describe, it, expect } from 'vitest';
-import { faqAnswer, systemPrompt } from './chatbot';
+import { systemPrompt, chatbot } from './chatbot';
+import { faqMatch, faqAnswer, SUGGEST } from './chatbotFaq';
 
-describe('faqAnswer', () => {
+describe('faqMatch', () => {
   it.each([
-    ['¿Cuánto cuesta una sesión?', 'WhatsApp'],
-    ['¿Dónde están?', 'La Capitanía'],
-    ['donde queda', 'La Capitanía'],
-    ['Quiero donar', '/apoyanos'],
-    ['Talleres de los sábados', '/talleres'],
-    ['¿Cómo reservo una hora?', '/servicios-clinicos'],
-    ['¿Qué servicios ofrecen?', 'Fonoaudiología'],
-    ['HOLA', 'asistente virtual'],
-  ])('"%s" responde con "%s"', (question, expected) => {
-    expect(faqAnswer(question)).toContain(expected);
+    ['¿Cuánto cuesta una sesión de fonoaudiología?', 'precio'],
+    ['aceptan fonasa?', 'precio'],
+    ['¿Dónde están?', 'ubicacion'],
+    ['como llego', 'ubicacion'],
+    ['Quiero donar', 'donar'],
+    ['cuenta para transferir', 'donar'],
+    ['Quiero ser socio mensual', 'socio'],
+    ['Talleres de los sábados', 'talleres'],
+    ['taller de cocina', 'taller-cocina'],
+    ['quiero inscribirme en motricidad', 'taller-motricidad'],
+    ['¿Cómo reservo una hora?', 'reservar'],
+    ['quiero cancelar mi hora', 'cancelar'],
+    ['¿Qué servicios ofrecen?', 'servicios'],
+    ['mi hijo tiene problemas de lenguaje', 'servicio-fono'],
+    ['hacen terapia ocupacional?', 'servicio-to'],
+    ['¿Cómo funciona la lista de espera?', 'espera'],
+    ['¿Qué horario tienen?', 'horario'],
+    ['necesito hablar con una persona', 'persona'],
+    ['emergencia', 'emergencia'],
+    ['qué es APED', 'aped'],
+    ['pueden ver a mi hija de 5 años', 'edad'],
+  ])('"%s" → %s', (question, id) => {
+    expect(faqMatch(question).id).toBe(id);
   });
 
-  it('deriva a WhatsApp cuando no reconoce la pregunta', () => {
-    expect(faqAnswer('xyz')).toContain('No estoy seguro');
+  describe('tolera tildes, mayúsculas y errores de escritura', () => {
+    it.each([
+      ['DONDE ESTAN UBICADOS', 'ubicacion'],
+      ['dnde estan ubicados', 'ubicacion'],
+      ['Kiero resevar una ora', 'reservar'],
+      ['taleres de los sabados', 'talleres'],
+      ['sicologo para mi hija', 'servicio-psicologia'],
+      ['tienen fonoaudiologa?', 'servicio-fono'],
+    ])('"%s" → %s', (question, id) => {
+      expect(faqMatch(question).id).toBe(id);
+    });
+  });
+
+  it('un saludo no le gana a una consulta concreta', () => {
+    expect(faqMatch('hola, quiero información de los taleres').id).toBe('talleres');
+    expect(faqMatch('hola').id).toBe('saludo');
+    expect(faqMatch('muchas gracias!').id).toBe('gracias');
+  });
+
+  it('"ahora" no se confunde con "hora"', () => {
+    expect(faqMatch('ahora mismo').id).toBe('desconocido');
+  });
+
+  it('cuando no reconoce la pregunta, deriva a WhatsApp y sugiere opciones', () => {
+    const { id, answer, suggestions } = faqMatch('asdfgh');
+    expect(id).toBe('desconocido');
+    expect(answer).toContain('WhatsApp');
+    expect(suggestions).toContain(SUGGEST.persona);
+  });
+
+  it('cada sugerencia lleva a una respuesta conocida', () => {
+    for (const suggestion of [...Object.values(SUGGEST), ...chatbot.quickReplies]) {
+      expect(faqMatch(suggestion).id, suggestion).not.toBe('desconocido');
+    }
+  });
+
+  it('faqAnswer devuelve solo el texto', () => {
+    expect(faqAnswer('quiero donar')).toContain('/apoyanos');
   });
 });
 

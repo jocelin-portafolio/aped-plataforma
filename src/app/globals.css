@@ -622,6 +622,7 @@ footer {
   max-width: calc(100vw - 2rem);
   height: 520px;
   max-height: calc(100vh - 7rem);
+  min-height: 320px;
   display: flex;
   flex-direction: column;
   background: var(--color-bg);
@@ -692,12 +693,17 @@ footer {
 
 .chat-typing { letter-spacing: 2px; color: var(--color-muted); }
 
+.chat-bubble--assistant a { color: var(--color-primary); font-weight: 500; }
+
 .chat-quick-replies {
   display: flex;
   flex-wrap: wrap;
   gap: 0.375rem;
   padding: 0.5rem 1rem;
   border-top: 1px solid var(--color-border);
+  max-height: 35%;
+  overflow-y: auto;
+  flex-shrink: 0;
 }
 
 .chat-quick-replies button {

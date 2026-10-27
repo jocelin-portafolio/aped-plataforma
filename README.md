@@ -15,7 +15,7 @@ Plataforma full stack para **APED (Agrupación Personas Empoderadas por la Disca
 - **Talleres grupales:** inscripción por sesión con **control de capacidad y lista de espera automática** cuando se alcanza el cupo máximo; evita inscripciones duplicadas.
 - **Donaciones:** formulario dedicado con validación en cliente y servidor.
 - **Galería** con lightbox accesible.
-- **Chatbot de atención al cliente:** widget flotante en todas las páginas que responde con Claude (streaming) usando la información de servicios, talleres y contacto de `config/`. Sin `ANTHROPIC_API_KEY` responde con preguntas frecuentes predefinidas.
+- **Chatbot de atención al cliente:** widget flotante en todas las páginas que responde con Claude (streaming) usando la información de servicios, talleres y contacto de `config/`. Sin `ANTHROPIC_API_KEY` responde gratis con preguntas frecuentes predefinidas (`config/chatbotFaq.js`): entiende mensajes sin tildes o con errores de escritura y ofrece botones de seguimiento.
 - **SEO técnico:** metadatos por ruta (Metadata API del App Router) y datos estructurados **JSON-LD (schema.org `NGO`)**.
 
 ## Arquitectura
