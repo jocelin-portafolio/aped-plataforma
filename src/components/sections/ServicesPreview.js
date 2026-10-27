@@ -1,23 +1,29 @@
-import Link from 'next/link';
-import { Section } from '@/components/ui';
+import { Stethoscope, ArrowRight } from 'lucide-react';
+import { Section, Button } from '@/components/ui';
+import { ServiceCard } from '@/components/features/services';
 import { clinicalServices } from '@/config/services';
 
 export default function ServicesPreview() {
   return (
     <Section
       id="services-preview"
-      className="services-preview"
-      title="Servicios Clínicos"
-      subtitle="Atención personalizada de lunes a sábado"
+      tinted
+      eyebrow="Servicios clínicos"
+      eyebrowIcon={Stethoscope}
+      title="Terapias individuales con especialistas"
+      subtitle="Sesiones 1 a 1, de lunes a sábado, con un plan para cada persona."
     >
-      <ul className="preview-list">
+      <div className="card-grid" role="list">
         {clinicalServices.map((s) => (
-          <li key={s.id}>
-            <Link href={`/servicios-clinicos#${s.id}`}>{s.name}</Link>
-          </li>
+          <ServiceCard key={s.id} service={s} />
         ))}
-      </ul>
-      <Link href="/servicios-clinicos" className="link-more">Ver todos los servicios</Link>
+      </div>
+      <div className="section-footer">
+        <Button href="/servicios-clinicos" variant="ghost">
+          Ver servicios y horarios
+          <ArrowRight size={18} aria-hidden="true" />
+        </Button>
+      </div>
     </Section>
   );
 }

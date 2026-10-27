@@ -1,3 +1,4 @@
+import { Check, Minus } from 'lucide-react';
 import { clinicalServices } from '@/config/services';
 
 // Horario general de atención. La disponibilidad real de cada hora se
@@ -8,16 +9,12 @@ const { hours } = clinicalServices[0].schedule;
 export default function ScheduleTable() {
   return (
     <div className="schedule-table">
-      <h3>Horario de Atención</h3>
-      <p className="section-subtitle">
-        Atendemos de lunes a sábado. Las horas libres de cada profesional aparecen al reservar.
-      </p>
       <table>
         <thead>
           <tr>
             <th scope="col">Día</th>
-            <th scope="col">Servicios clínicos</th>
-            <th scope="col">Talleres grupales</th>
+            <th scope="col">Terapias</th>
+            <th scope="col">Talleres</th>
           </tr>
         </thead>
         <tbody>
@@ -25,7 +22,17 @@ export default function ScheduleTable() {
             <tr key={day}>
               <th scope="row">{day}</th>
               <td>{hours.replace(' - ', ' a ')}</td>
-              <td>{day === 'Sábado' ? 'Sí' : 'No'}</td>
+              <td>
+                {day === 'Sábado' ? (
+                  <span className="schedule-yes">
+                    <Check size={16} aria-hidden="true" /> Sí
+                  </span>
+                ) : (
+                  <span className="schedule-no">
+                    <Minus size={16} aria-hidden="true" /> No
+                  </span>
+                )}
+              </td>
             </tr>
           ))}
         </tbody>

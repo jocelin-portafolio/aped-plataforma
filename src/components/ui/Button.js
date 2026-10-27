@@ -4,6 +4,8 @@ const variants = {
   primary: 'btn btn-primary',
   secondary: 'btn btn-secondary',
   ghost: 'btn btn-ghost',
+  light: 'btn btn-light',
+  'outline-light': 'btn btn-outline-light',
 };
 
 const sizes = {

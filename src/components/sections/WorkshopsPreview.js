@@ -1,23 +1,29 @@
-import Link from 'next/link';
-import { Section } from '@/components/ui';
+import { Users, ArrowRight } from 'lucide-react';
+import { Section, Button } from '@/components/ui';
+import { WorkshopCard } from '@/components/features/services';
 import { workshops } from '@/config/workshops';
 
 export default function WorkshopsPreview() {
   return (
     <Section
       id="workshops-preview"
-      className="workshops-preview"
-      title="Talleres Grupales"
-      subtitle="Sábados - Cupos limitados"
+      tinted
+      eyebrow="Talleres grupales"
+      eyebrowIcon={Users}
+      title="Aprender y compartir, cada sábado"
+      subtitle="Talleres en grupos pequeños para desarrollar habilidades y hacer comunidad."
     >
-      <ul className="preview-list">
+      <div className="card-grid" role="list">
         {workshops.map((w) => (
-          <li key={w.id}>
-            <Link href={`/talleres#${w.id}`}>{w.title}</Link>
-          </li>
+          <WorkshopCard key={w.id} workshop={w} />
         ))}
-      </ul>
-      <Link href="/talleres" className="link-more">Ver todos los talleres</Link>
+      </div>
+      <div className="section-footer">
+        <Button href="/talleres" variant="ghost">
+          Ver todos los talleres
+          <ArrowRight size={18} aria-hidden="true" />
+        </Button>
+      </div>
     </Section>
   );
 }

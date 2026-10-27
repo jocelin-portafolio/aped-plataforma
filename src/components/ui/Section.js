@@ -3,6 +3,10 @@ export default function Section({
   id,
   title,
   subtitle,
+  eyebrow,
+  eyebrowIcon: EyebrowIcon,
+  align = 'center',
+  tinted = false,
   className = '',
   ariaLabelledby,
   ...props
@@ -11,14 +15,26 @@ export default function Section({
 
   return (
     <section
-      className={`section ${className}`.trim()}
+      className={`section ${tinted ? 'section--tinted' : ''} ${className}`.trim()}
       id={id}
       aria-labelledby={headingId}
       {...props}
     >
-      {title && <h2 id={headingId}>{title}</h2>}
-      {subtitle && <p className="section-subtitle">{subtitle}</p>}
-      {children}
+      <div className="container">
+        {title && (
+          <header className={`section-header ${align === 'left' ? 'section-header--left' : ''}`.trim()}>
+            {eyebrow && (
+              <span className="eyebrow">
+                {EyebrowIcon && <EyebrowIcon size={14} strokeWidth={2.5} aria-hidden="true" />}
+                {eyebrow}
+              </span>
+            )}
+            <h2 id={headingId}>{title}</h2>
+            {subtitle && <p className="section-subtitle">{subtitle}</p>}
+          </header>
+        )}
+        {children}
+      </div>
     </section>
   );
 }

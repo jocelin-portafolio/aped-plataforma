@@ -7,6 +7,7 @@ import { clinicalServices } from '@/config/services';
 import { bookingConfig } from '@/config/booking';
 import { contact } from '@/config/navigation';
 import { formatDay, formatDayShort } from '@/lib/agendaTime';
+import { CalendarCheck, CheckCircle2 } from 'lucide-react';
 
 const bookableServices = clinicalServices.filter((s) => bookingConfig.specialties.includes(s.id));
 
@@ -83,18 +84,19 @@ export default function BookingForm() {
 
   return (
     <form onSubmit={handleSubmit} aria-label="Formulario de reservas" className="form booking-form">
-      <h2>Reservar Sesión Clínica</h2>
-
       {booked && (
         <Alert.Success>
-          ¡Hora reservada! {bookableServices.find((s) => s.id === booked.specialty)?.name} el{' '}
+          <CheckCircle2 size={18} aria-hidden="true" className="alert-icon" /> ¡Hora reservada! {bookableServices.find((s) => s.id === booked.specialty)?.name} el{' '}
           {formatDay(booked.date)} a las {booked.startTime}, con {booked.therapistName}. Si necesitas
           cambiarla, escríbenos por WhatsApp al {contact.phone.display}.
         </Alert.Success>
       )}
 
       <div className="form-group">
-        <label htmlFor="specialty">Servicio</label>
+        <label htmlFor="specialty" className="form-step">
+          <Step n={1} />
+          ¿Qué especialidad necesitas?
+        </label>
         <select
           id="specialty"
           required
@@ -126,7 +128,10 @@ export default function BookingForm() {
 
       {days.length > 0 && (
         <fieldset className="form-group">
-          <legend>Día</legend>
+          <legend className="form-step">
+            <Step n={2} />
+            Elige el día
+          </legend>
           <div className="slots-grid">
             {days.map((date) => (
               <label key={date} className="slot-option">
@@ -146,7 +151,10 @@ export default function BookingForm() {
 
       {daySlots.length > 0 && (
         <fieldset className="form-group">
-          <legend>Hora disponible el {formatDay(values.date)}</legend>
+          <legend className="form-step">
+            <Step n={3} />
+            Hora libre el {formatDay(values.date)}
+          </legend>
           <div className="slots-grid slots-grid--wide">
             {daySlots.map((s) => (
               <label key={slotId(s)} className="slot-option">
@@ -170,7 +178,11 @@ export default function BookingForm() {
 
       {selected && (
         <fieldset className="form-group booking-patient">
-          <legend>Datos del paciente</legend>
+          <legend className="form-step">
+            <Step n={4} />
+            Datos del paciente
+          </legend>
+          <div className="form-row">
           {[
             ['firstName', 'Nombre', 'text', 'given-name'],
             ['lastName', 'Apellido', 'text', 'family-name'],
@@ -192,14 +204,24 @@ export default function BookingForm() {
               />
             </div>
           ))}
+          </div>
         </fieldset>
       )}
 
-      <Button type="submit" disabled={loading || !selected} variant="primary">
-        {loading ? 'Reservando...' : 'Reservar'}
+      <Button type="submit" disabled={loading || !selected} variant="primary" size="lg">
+        <CalendarCheck size={20} aria-hidden="true" />
+        {loading ? 'Reservando...' : 'Confirmar reserva'}
       </Button>
 
       {result && !result.success && <Alert.Error>{result.error || 'Error al reservar'}</Alert.Error>}
     </form>
+  );
+}
+
+function Step({ n }) {
+  return (
+    <span className="form-step-number" aria-hidden="true">
+      {n}
+    </span>
   );
 }
