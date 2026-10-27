@@ -6,4 +6,3 @@ out
 *.log
 .DS_Store
 .env.production
-deploy/.env
