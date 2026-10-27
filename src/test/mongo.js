@@ -11,9 +11,15 @@ export async function startMongo() {
   await connectDB();
 }
 
-export async function stopMongo() {
+/** Cierra la conexión y vacía el cache de connectDB (sin reemplazar el objeto, que db.js conserva). */
+export async function disconnectMongo() {
   await mongoose.disconnect();
-  global.mongoose = { conn: null, promise: null };
+  global.mongoose.conn = null;
+  global.mongoose.promise = null;
+}
+
+export async function stopMongo() {
+  await disconnectMongo();
   await server?.stop();
 }
 

@@ -16,7 +16,7 @@ Plataforma full stack para **APED (Agrupación Personas Empoderadas por la Disca
 - **Donaciones:** formulario dedicado con validación en cliente y servidor.
 - **Galería** con lightbox accesible.
 - **Chatbot de atención al cliente:** widget flotante en todas las páginas que responde con Claude (streaming) usando la información de servicios, talleres y contacto de `config/`. Sin `ANTHROPIC_API_KEY` responde gratis con preguntas frecuentes predefinidas (`config/chatbotFaq.js`): entiende mensajes sin tildes o con errores de escritura y ofrece botones de seguimiento.
-- **Reserva de horas por chat (web y WhatsApp):** Terapia Ocupacional, Fonoaudiología y Psicología. El bot guía paso a paso (especialidad → día → hora → datos del paciente → confirmación) consultando la agenda en tiempo real: horario semanal de cada terapeuta menos las citas tomadas, en la zona horaria de Santiago. Al confirmar vuelve a validar el bloque y evita dobles reservas simultáneas.
+- **Reserva de horas por chat (web y WhatsApp) y en el formulario de `/servicios-clinicos`:** Terapia Ocupacional, Fonoaudiología y Psicología. El bot guía paso a paso (especialidad → día → hora → datos del paciente → confirmación) consultando la agenda en tiempo real: horario semanal de cada terapeuta menos las citas tomadas, en la zona horaria de Santiago. Al confirmar vuelve a validar el bloque y evita dobles reservas simultáneas.
 - **Bot en WhatsApp** (API de WhatsApp Cloud de Meta): el mismo asistente responde y agenda en el WhatsApp de APED, con botones y listas interactivas.
 - **SEO técnico:** metadatos por ruta (Metadata API del App Router) y datos estructurados **JSON-LD (schema.org `NGO`)**.
 
@@ -69,6 +69,8 @@ src/
 | `GET` | `/api/workshops` · `/api/workshops/sessions` | Talleres y sus sesiones. |
 | `POST` | `/api/workshops/:id/enroll` | Inscribe a un cliente o lo envía a lista de espera. |
 | `POST` | `/api/donations` | Registra una donación. |
+| `GET` | `/api/booking/availability?specialty=` | Horas libres en tiempo real de una especialidad agendable en línea (próximos 14 días). |
+| `POST` | `/api/booking` | Reserva desde el formulario web: `{ specialty, therapistId, date, startTime, patient }`. Responde 409 si la hora ya se tomó. |
 | `POST` | `/api/chat` | Chatbot web: recibe `{ messages, booking?, optionId? }`. Responde texto en streaming, o JSON `{ reply, options, booking }` durante una reserva. |
 | `GET` · `POST` | `/api/whatsapp` | Webhook de WhatsApp: verificación (`hub.challenge`) y mensajes entrantes firmados por Meta. |
 
@@ -126,4 +128,3 @@ El bot responde mensajes que inician las personas (dentro de la ventana de 24 ho
 - Notificaciones por correo al confirmar citas o pasar de lista de espera a inscrito.
 - Tests de integración de los Route Handlers restantes.
 - Recordatorios de citas por WhatsApp (requieren plantillas aprobadas por Meta).
-- Corregir el formulario de reservas de `/servicios-clinicos`, que hoy no envía terapeuta ni paciente válidos.

@@ -1,59 +1,97 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useFormState } from '@/hooks/useFormState';
 import { Button, Alert } from '@/components/ui';
 import { clinicalServices } from '@/config/services';
+import { bookingConfig } from '@/config/booking';
+import { contact } from '@/config/navigation';
+import { formatDay, formatDayShort } from '@/lib/agendaTime';
+
+const bookableServices = clinicalServices.filter((s) => bookingConfig.specialties.includes(s.id));
+
+const EMPTY_PATIENT = { firstName: '', lastName: '', dateOfBirth: '', email: '', phone: '' };
 
 export default function BookingForm() {
-  const { values, loading, result, updateField, submit } = useFormState({
-    clientEmail: '',
+  const { values, loading, result, updateField, updateFields, submit } = useFormState({
     specialty: '',
     date: '',
-    startTime: '',
+    slotId: '',
+    ...EMPTY_PATIENT,
   });
   const [slots, setSlots] = useState([]);
+  const [agenda, setAgenda] = useState({ loading: false, error: null });
+  const [booked, setBooked] = useState(null);
 
-  async function fetchAvailability() {
-    if (!values.date || !values.specialty) return;
-    try {
-      const res = await fetch(
-        `/api/availability?date=${values.date}&specialty=${values.specialty}`
-      );
-      const data = await res.json();
-      if (data.success) setSlots(data.data.availableSlots);
-    } catch {
+  // Consulta la agenda en el momento: horario de cada terapeuta menos citas tomadas.
+  const loadSlots = useCallback(async (specialty) => {
+    if (!specialty) {
       setSlots([]);
+      return;
     }
-  }
+    setAgenda({ loading: true, error: null });
+    try {
+      const res = await fetch(`/api/booking/availability?specialty=${specialty}`, { cache: 'no-store' });
+      const json = await res.json();
+      if (!json.success) throw new Error(json.error);
+      setSlots(json.data.slots);
+      setAgenda({ loading: false, error: null });
+    } catch (err) {
+      setSlots([]);
+      setAgenda({ loading: false, error: err.message || 'No pudimos consultar la agenda' });
+    }
+  }, []);
+
+  useEffect(() => {
+    loadSlots(values.specialty);
+  }, [values.specialty, loadSlots]);
+
+  const days = [...new Set(slots.map((s) => s.date))];
+  const daySlots = slots.filter((s) => s.date === values.date);
+  const slotId = (s) => `${s.therapistId}|${s.date}|${s.startTime}`;
+  const selected = slots.find((s) => slotId(s) === values.slotId);
 
   async function handleSubmit(e) {
     e.preventDefault();
-    await submit('/api/appointments', {
+    if (!selected) return;
+    const data = await submit('/api/booking', {
       body: JSON.stringify({
-        clientId: values.clientEmail,
         specialty: values.specialty,
-        date: values.date,
-        startTime: values.startTime,
-        endTime: addMinutes(values.startTime, 30),
+        therapistId: selected.therapistId,
+        date: selected.date,
+        startTime: selected.startTime,
+        patient: {
+          firstName: values.firstName,
+          lastName: values.lastName,
+          dateOfBirth: values.dateOfBirth,
+          email: values.email,
+          phone: values.phone,
+        },
       }),
     });
+
+    if (data.success) {
+      setBooked(data.data);
+      updateFields({ date: '', slotId: '', ...EMPTY_PATIENT });
+    }
+    // Tras reservar (o si la hora se tomó), la lista vuelve a reflejar la agenda.
+    if (data.success || data.reason === 'taken') {
+      updateField('slotId', '');
+      loadSlots(values.specialty);
+    }
   }
 
   return (
-    <form onSubmit={handleSubmit} aria-label="Formulario de reservas" className="form">
+    <form onSubmit={handleSubmit} aria-label="Formulario de reservas" className="form booking-form">
       <h2>Reservar Sesión Clínica</h2>
 
-      <div className="form-group">
-        <label htmlFor="clientEmail">Tu email</label>
-        <input
-          id="clientEmail"
-          type="email"
-          required
-          value={values.clientEmail}
-          onChange={(e) => updateField('clientEmail', e.target.value)}
-        />
-      </div>
+      {booked && (
+        <Alert.Success>
+          ¡Hora reservada! {bookableServices.find((s) => s.id === booked.specialty)?.name} el{' '}
+          {formatDay(booked.date)} a las {booked.startTime}, con {booked.therapistName}. Si necesitas
+          cambiarla, escríbenos por WhatsApp al {contact.phone.display}.
+        </Alert.Success>
+      )}
 
       <div className="form-group">
         <label htmlFor="specialty">Servicio</label>
@@ -62,65 +100,106 @@ export default function BookingForm() {
           required
           value={values.specialty}
           onChange={(e) => {
-            updateField('specialty', e.target.value);
+            setBooked(null);
+            updateFields({ specialty: e.target.value, date: '', slotId: '' });
           }}
         >
           <option value="">Seleccionar...</option>
-          {clinicalServices.map((s) => (
+          {bookableServices.map((s) => (
             <option key={s.id} value={s.id}>{s.name}</option>
           ))}
         </select>
+        <small className="form-hint">
+          Para Terapia Conductual escríbenos por WhatsApp al {contact.phone.display}.
+        </small>
       </div>
 
-      <div className="form-group">
-        <label htmlFor="date">Fecha</label>
-        <input
-          id="date"
-          type="date"
-          required
-          value={values.date}
-          onChange={(e) => {
-            updateField('date', e.target.value);
-            fetchAvailability();
-          }}
-        />
-      </div>
+      {agenda.loading && <p className="form-hint" role="status">Consultando horas disponibles…</p>}
+      {agenda.error && <Alert.Error>{agenda.error}. Intenta más tarde o escríbenos por WhatsApp.</Alert.Error>}
 
-      {slots.length > 0 && (
+      {values.specialty && !agenda.loading && !agenda.error && days.length === 0 && (
+        <Alert type="info">
+          No hay horas libres en los próximos {bookingConfig.daysAhead} días. Escríbenos por WhatsApp al{' '}
+          {contact.phone.display} y te avisamos cuando se libere una.
+        </Alert>
+      )}
+
+      {days.length > 0 && (
         <fieldset className="form-group">
-          <legend>Horarios disponibles</legend>
+          <legend>Día</legend>
           <div className="slots-grid">
-            {slots.map((slot) => (
-              <label key={slot} className="slot-option">
+            {days.map((date) => (
+              <label key={date} className="slot-option">
                 <input
                   type="radio"
-                  name="startTime"
-                  value={slot}
-                  checked={values.startTime === slot}
-                  onChange={(e) => updateField('startTime', e.target.value)}
+                  name="date"
+                  value={date}
+                  checked={values.date === date}
+                  onChange={() => updateFields({ date, slotId: '' })}
                 />
-                {slot}
+                {formatDayShort(date)}
               </label>
             ))}
           </div>
         </fieldset>
       )}
 
-      <Button type="submit" disabled={loading || !values.startTime} variant="primary">
+      {daySlots.length > 0 && (
+        <fieldset className="form-group">
+          <legend>Hora disponible el {formatDay(values.date)}</legend>
+          <div className="slots-grid slots-grid--wide">
+            {daySlots.map((s) => (
+              <label key={slotId(s)} className="slot-option">
+                <input
+                  type="radio"
+                  name="slot"
+                  value={slotId(s)}
+                  checked={values.slotId === slotId(s)}
+                  onChange={(e) => updateField('slotId', e.target.value)}
+                />
+                <span>
+                  <strong>{s.startTime}</strong>
+                  <br />
+                  <small>{s.therapistName}</small>
+                </span>
+              </label>
+            ))}
+          </div>
+        </fieldset>
+      )}
+
+      {selected && (
+        <fieldset className="form-group booking-patient">
+          <legend>Datos del paciente</legend>
+          {[
+            ['firstName', 'Nombre', 'text', 'given-name'],
+            ['lastName', 'Apellido', 'text', 'family-name'],
+            ['dateOfBirth', 'Fecha de nacimiento', 'date', 'bday'],
+            ['email', 'Email de contacto', 'email', 'email'],
+            ['phone', 'Teléfono', 'tel', 'tel'],
+          ].map(([field, label, type, autoComplete]) => (
+            <div key={field} className="form-group">
+              <label htmlFor={field}>{label}</label>
+              <input
+                id={field}
+                type={type}
+                required
+                autoComplete={autoComplete}
+                max={type === 'date' ? new Date().toISOString().slice(0, 10) : undefined}
+                placeholder={field === 'phone' ? '+56 9 1234 5678' : undefined}
+                value={values[field]}
+                onChange={(e) => updateField(field, e.target.value)}
+              />
+            </div>
+          ))}
+        </fieldset>
+      )}
+
+      <Button type="submit" disabled={loading || !selected} variant="primary">
         {loading ? 'Reservando...' : 'Reservar'}
       </Button>
 
-      {result && (
-        result.success
-          ? <Alert.Success>Reserva confirmada</Alert.Success>
-          : <Alert.Error>{result.error || 'Error al reservar'}</Alert.Error>
-      )}
+      {result && !result.success && <Alert.Error>{result.error || 'Error al reservar'}</Alert.Error>}
     </form>
   );
-}
-
-function addMinutes(time, minutes) {
-  const [h, m] = time.split(':').map(Number);
-  const total = h * 60 + m + minutes;
-  return `${String(Math.floor(total / 60)).padStart(2, '0')}:${String(total % 60).padStart(2, '0')}`;
 }
