@@ -1,9 +1,13 @@
 import { connectDB } from '@/config/db';
 import Donation from '@/models/Donation';
 import { successResponse, errorResponse, paginatedResponse } from '@/lib/responses';
+import { requireRole } from '@/lib/auth';
 import { validateDonation } from '@/lib/validators';
 
 export async function GET(request) {
+  const { response: authError } = await requireRole(request, ['admin']);
+  if (authError) return authError;
+
   try {
     await connectDB();
     const { searchParams } = new URL(request.url);
@@ -58,6 +62,9 @@ export async function POST(request) {
 }
 
 export async function PATCH(request) {
+  const { response: authError } = await requireRole(request, ['admin']);
+  if (authError) return authError;
+
   try {
     await connectDB();
     const { searchParams } = new URL(request.url);

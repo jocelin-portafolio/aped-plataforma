@@ -590,6 +590,91 @@ footer {
   margin: 0;
 }
 
+/* ===== PANELES (admin / terapeuta) ===== */
+.login-form { margin: 0 auto; max-width: 420px; padding: 1rem 0; }
+
+.panel { padding: 1.5rem 0 3rem; }
+
+.panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 1.5rem;
+}
+
+.panel-header h1 { margin: 0; font-size: 1.75rem; }
+.panel-header .section-subtitle { margin: 0.25rem 0 0; }
+
+.panel-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 0.75rem;
+  margin: 0 0 2rem;
+}
+
+.panel-stat {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: 1rem;
+}
+
+.panel-stat dt { font-size: 0.875rem; color: var(--color-muted); }
+.panel-stat dd { margin: 0.25rem 0 0; font-size: 1.75rem; font-weight: 700; }
+
+.panel-section { margin-bottom: 2.5rem; }
+.panel-section h2 { font-size: 1.25rem; margin: 0 0 1rem; }
+.panel-day h3 { font-size: 1rem; margin: 1.25rem 0 0.5rem; text-transform: capitalize; }
+.panel-empty { color: var(--color-muted); }
+
+.panel-table-wrap { overflow-x: auto; }
+
+.panel-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9375rem;
+}
+
+.panel-table th,
+.panel-table td {
+  padding: 0.625rem 0.75rem;
+  border-bottom: 1px solid var(--color-border);
+  text-align: left;
+  vertical-align: top;
+}
+
+.panel-table thead th { font-size: 0.8125rem; color: var(--color-muted); font-weight: 600; }
+.panel-table small { color: var(--color-muted); }
+.panel-table tr.is-closed td { opacity: 0.6; }
+
+.panel-actions { white-space: nowrap; text-align: right; }
+.panel-actions .btn { margin-left: 0.25rem; }
+
+.btn-danger { background: transparent; color: #b91c1c; border: 1px solid #b91c1c; }
+.btn-danger:hover:not(:disabled) { background: #b91c1c; color: #fff; }
+
+.status {
+  display: inline-block;
+  padding: 0.125rem 0.5rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.status--scheduled { background: #fef3c7; color: #92400e; }
+.status--confirmed { background: #dbeafe; color: #1e40af; }
+.status--completed { background: #d1fae5; color: #065f46; }
+.status--cancelled { background: #f3f4f6; color: #4b5563; }
+.status--no-show { background: #fee2e2; color: #991b1b; }
+
+.panel-form { padding: 1.5rem 0 0; }
+.panel-form h3 { margin: 0; }
+
+.footer-staff-link { font-size: 0.8125rem; color: var(--color-muted); }
+
 /* ===== CHAT ===== */
 .sr-only {
   position: absolute;

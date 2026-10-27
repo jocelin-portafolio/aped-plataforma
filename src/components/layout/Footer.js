@@ -38,6 +38,11 @@ export default function Footer() {
       </div>
       <div className="footer-bottom">
         <p>&copy; {new Date().getFullYear()} APED. Todos los derechos reservados.</p>
+        <p>
+          <a href="/login" className="footer-staff-link">
+            Acceso equipo
+          </a>
+        </p>
       </div>
     </footer>
   );

@@ -2,8 +2,12 @@ import { connectDB } from '@/config/db';
 import WorkshopSession from '@/models/WorkshopSession';
 import Workshop from '@/models/Workshop';
 import { successResponse, errorResponse } from '@/lib/responses';
+import { requireRole } from '@/lib/auth';
 
 export async function POST(request) {
+  const { response: authError } = await requireRole(request, ['admin']);
+  if (authError) return authError;
+
   try {
     await connectDB();
     const body = await request.json();

@@ -2,14 +2,25 @@ import { connectDB } from '@/config/db';
 import Appointment from '@/models/Appointment';
 import { successResponse, errorResponse, paginatedResponse } from '@/lib/responses';
 import { validateAppointment } from '@/lib/validators';
+import { requireRole } from '@/lib/auth';
+
+// Estados que puede poner un terapeuta en sus propias citas.
+const THERAPIST_STATUSES = ['confirmed', 'completed', 'no-show'];
 
 export async function GET(request) {
+  const { session, response } = await requireRole(request, ['admin', 'therapist']);
+  if (response) return response;
+  if (session.role === 'therapist' && !session.therapistId) {
+    return errorResponse('Tu cuenta no está vinculada a una ficha de terapeuta', 403);
+  }
+
   try {
     await connectDB();
     const { searchParams } = new URL(request.url);
     const page = parseInt(searchParams.get('page') || '1');
     const limit = parseInt(searchParams.get('limit') || '20');
-    const therapistId = searchParams.get('therapistId');
+    // Un terapeuta solo ve su propia agenda.
+    const therapistId = session.role === 'therapist' ? session.therapistId : searchParams.get('therapistId');
     const clientId = searchParams.get('clientId');
     const specialty = searchParams.get('specialty');
     const date = searchParams.get('date');
@@ -44,6 +55,9 @@ export async function GET(request) {
 }
 
 export async function POST(request) {
+  const { response } = await requireRole(request, ['admin']);
+  if (response) return response;
+
   try {
     await connectDB();
     const body = await request.json();
@@ -75,13 +89,26 @@ export async function POST(request) {
 }
 
 export async function PATCH(request) {
+  const { session, response } = await requireRole(request, ['admin', 'therapist']);
+  if (response) return response;
+
   try {
     await connectDB();
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
     if (!id) return errorResponse('Appointment ID is required');
 
-    const body = await request.json();
+    let body = await request.json();
+
+    // El terapeuta solo cambia el estado de sus propias citas.
+    if (session.role === 'therapist') {
+      if (!THERAPIST_STATUSES.includes(body.status) || Object.keys(body).length !== 1) {
+        return errorResponse(`Solo puedes cambiar el estado a: ${THERAPIST_STATUSES.join(', ')}`, 403);
+      }
+      const own = await Appointment.exists({ _id: id, therapistId: session.therapistId });
+      if (!own) return errorResponse('Cita no encontrada', 404);
+      body = { status: body.status };
+    }
 
     if (body.therapistId && body.date && body.startTime) {
       const slotAvailable = await Appointment.isSlotAvailable(
@@ -110,6 +137,9 @@ export async function PATCH(request) {
 }
 
 export async function DELETE(request) {
+  const { response } = await requireRole(request, ['admin']);
+  if (response) return response;
+
   try {
     await connectDB();
     const { searchParams } = new URL(request.url);
