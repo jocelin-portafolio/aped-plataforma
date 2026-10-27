@@ -1,0 +1,50 @@
+# Producción en un servidor propio (Vultr): sitio + MongoDB + Caddy (HTTPS).
+#
+#   cd deploy
+#   cp .env.production.example .env.production   # y completar
+#   docker compose up -d --build
+#
+# Caddy obtiene el certificado HTTPS de Let's Encrypt para SITE_DOMAIN.
+
+services:
+  app:
+    build:
+      context: ..
+    restart: unless-stopped
+    env_file: .env.production
+    environment:
+      MONGODB_URI: mongodb://mongo:27017/aped
+    depends_on:
+      - mongo
+    # Solo accesible desde Caddy, no desde internet.
+    expose:
+      - "3000"
+
+  mongo:
+    image: mongo:7
+    restart: unless-stopped
+    volumes:
+      - mongo-data:/data/db
+    # Sin puertos publicados: la base solo es accesible dentro de Docker.
+
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    # Caddy solo recibe el dominio (definido en deploy/.env), no los secretos.
+    environment:
+      SITE_DOMAIN: ${SITE_DOMAIN:?Define SITE_DOMAIN en deploy/.env}
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    depends_on:
+      - app
+
+volumes:
+  mongo-data:
+  caddy-data:
+  caddy-config:
