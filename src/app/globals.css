@@ -718,6 +718,7 @@ footer {
 }
 
 .chat-quick-replies button:hover { background: var(--color-primary); color: #fff; }
+.chat-quick-replies small { font-size: 0.75rem; opacity: 0.8; }
 
 .chat-form {
   display: flex;

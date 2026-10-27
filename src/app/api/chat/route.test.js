@@ -8,6 +8,13 @@ vi.mock('@anthropic-ai/sdk', () => ({
   },
 }));
 
+vi.mock('@/lib/booking', () => ({
+  getAvailability: vi.fn(async () => [
+    { therapistId: 't1', therapistName: 'Carla Soto', date: '2026-11-03', startTime: '09:00', endTime: '09:30' },
+  ]),
+  bookAppointment: vi.fn(),
+}));
+
 const { POST } = await import('./route');
 
 function chatRequest(body) {
@@ -69,6 +76,52 @@ describe('POST /api/chat', () => {
       expect(json.success).toBe(false);
       expect(json.error).toContain(error);
       expect(streamMock).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('reserva de horas', () => {
+    it('inicia la reserva y responde JSON con opciones y estado', async () => {
+      const res = await POST(ask('quiero reservar una hora de fono'));
+      expect(res.headers.get('Content-Type')).toContain('application/json');
+      const data = await res.json();
+      expect(data.reply).toContain('Fonoaudiología');
+      expect(data.options[0]).toMatchObject({ id: 'day:2026-11-03', label: 'Mar 3 nov' });
+      expect(data.booking.step).toBe('day');
+      expect(streamMock).not.toHaveBeenCalled();
+    });
+
+    it('continúa la reserva con el estado que envía el navegador', async () => {
+      const first = await (await POST(ask('reservar fono'))).json();
+      const res = await POST(
+        chatRequest({
+          messages: [
+            { role: 'user', content: 'reservar fono' },
+            { role: 'assistant', content: first.reply },
+            { role: 'user', content: 'Mar 3 nov' },
+          ],
+          booking: first.booking,
+        })
+      );
+      const data = await res.json();
+      expect(data.booking.step).toBe('time');
+      expect(data.options[0]).toMatchObject({ label: '09:00', description: 'con Carla Soto' });
+    });
+
+    it('usa el id del botón cuando el navegador lo envía', async () => {
+      const first = await (await POST(ask('reservar fono'))).json();
+      const res = await POST(
+        chatRequest({
+          messages: [{ role: 'user', content: 'Mar 3 nov' }],
+          booking: first.booking,
+          optionId: 'day:2026-11-03',
+        })
+      );
+      expect((await res.json()).booking).toMatchObject({ step: 'time', date: '2026-11-03' });
+    });
+
+    it('rechaza un estado de reserva inválido', async () => {
+      const res = await POST(chatRequest({ messages: [{ role: 'user', content: 'hola' }], booking: 'x' }));
+      expect(res.status).toBe(400);
     });
   });
 

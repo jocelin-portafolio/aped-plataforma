@@ -25,7 +25,9 @@ function withLinks(text) {
 export default function ChatWidget() {
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState([]);
-  const [suggestions, setSuggestions] = useState(chatbot.quickReplies);
+  const [suggestions, setSuggestions] = useState(chatbot.quickReplies.map((label) => ({ label })));
+  // Estado de la reserva en curso; el servidor lo devuelve en cada paso.
+  const [booking, setBooking] = useState(null);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const listRef = useRef(null);
@@ -45,7 +47,8 @@ export default function ChatWidget() {
     toggleRef.current?.focus();
   }
 
-  async function send(text) {
+  // `optionId` identifica el botón tocado (dos horas pueden tener el mismo texto).
+  async function send(text, optionId) {
     const content = text.trim();
     if (!content || loading) return;
 
@@ -63,19 +66,30 @@ export default function ChatWidget() {
       const res = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ messages: history.slice(-chatbot.limits.maxMessages) }),
+        body: JSON.stringify({ messages: history.slice(-chatbot.limits.maxMessages), booking, optionId }),
       });
 
       if (!res.ok) {
         const json = await res.json().catch(() => null);
         updateReply(json?.error || 'No pude responder en este momento. Intenta nuevamente.');
+        setBooking(null);
         return;
       }
 
+      // Los pasos de la reserva llegan como JSON con sus opciones.
+      if (res.headers.get('Content-Type')?.includes('application/json')) {
+        const data = await res.json();
+        updateReply(data.reply);
+        setSuggestions(data.options || []);
+        setBooking(data.booking);
+        return;
+      }
+
+      setBooking(null);
       const header = res.headers.get('X-Chat-Suggestions');
       if (header) {
         try {
-          setSuggestions(JSON.parse(decodeURIComponent(header)));
+          setSuggestions(JSON.parse(decodeURIComponent(header)).map((label) => ({ label })));
         } catch {
           // Sugerencias mal formadas: se omiten.
         }
@@ -139,9 +153,10 @@ export default function ChatWidget() {
 
           {!loading && suggestions.length > 0 && (
             <div className="chat-quick-replies" aria-label="Sugerencias">
-              {suggestions.map((q) => (
-                <button key={q} type="button" onClick={() => send(q)}>
-                  {q}
+              {suggestions.map((s) => (
+                <button key={s.id || s.label} type="button" onClick={() => send(s.label, s.id)}>
+                  {s.label}
+                  {s.description && <small> · {s.description}</small>}
                 </button>
               ))}
             </div>
