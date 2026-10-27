@@ -1,6 +1,7 @@
 import { homeJsonLd } from '@/lib/jsonld';
 import JsonLd from '@/components/layout/JsonLd';
 import HeroSection from '@/components/sections/HeroSection';
+import HowItWorks from '@/components/sections/HowItWorks';
 import MissionSection from '@/components/sections/MissionSection';
 import ServicesPreview from '@/components/sections/ServicesPreview';
 import WorkshopsPreview from '@/components/sections/WorkshopsPreview';
@@ -18,8 +19,9 @@ export default function HomePage() {
     <>
       <JsonLd data={homeJsonLd()} />
       <HeroSection />
-      <MissionSection />
+      <HowItWorks />
       <ServicesPreview />
+      <MissionSection />
       <WorkshopsPreview />
       <GallerySection />
       <CTASection />

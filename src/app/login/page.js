@@ -1,4 +1,5 @@
 import { redirect } from 'next/navigation';
+import { LockKeyhole } from 'lucide-react';
 import { Section } from '@/components/ui';
 import { LoginForm } from '@/components/features/auth';
 import { getSession } from '@/lib/auth';
@@ -18,7 +19,10 @@ export default async function LoginPage({ searchParams }) {
     <Section
       id="login"
       className="login-page"
-      title="Acceso equipo APED"
+      tinted
+      eyebrow="Equipo APED"
+      eyebrowIcon={LockKeyhole}
+      title="Acceso del equipo"
       subtitle="Ingreso para administradores y terapeutas"
     >
       <LoginForm next={typeof next === 'string' ? next : ''} />
