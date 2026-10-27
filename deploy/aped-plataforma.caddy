@@ -1,5 +1,5 @@
-# APED en NINTAI. install.sh reemplaza __DOMAIN__ y copia este archivo a
-# /opt/nintai/proxy/sites/ para que el proxy compartido le dé HTTPS.
+# APED en NINTAI. install.sh pone el dominio de SITE_DOMAIN en la línea de
+# abajo, agrega las redirecciones y copia el archivo a /opt/nintai/proxy/sites/.
 __DOMAIN__ {
 	import seguridad
 	reverse_proxy aped-plataforma:3000
